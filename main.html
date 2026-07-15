@@ -10,9 +10,127 @@
     <h1>Shopping List</h1>
 
     <input type="text" id="item-input" placeholder="Enter item">
-    <button>Add Item</button>
+    <button id="add-button">Add Item</button>
 
     <ul id="shopping-list"></ul>
+    <p id="empty-msg">Your list is empty</p>
+    <p id="count"></p>
+
+    <script>
+        const itemInput = document.getElementById("item-input");
+        const addButton = document.getElementById("add-button");
+        const shoppingList = document.getElementById("shopping-list");
+        const emptyMsg = document.getElementById("empty-msg");
+        const countLabel = document.getElementById("count");
+
+        let items = [];
+        let idCount = 1;
+
+        function updateMeta(){
+            const total = items.length;
+            emptyMsg.style.display = total === 0 ? 'block': 'none';
+            countLabel.textContent = total === 0 ? '' : `${total} item${total === 1 ? '' : 's'}`;
+        }
+
+        function addItem(text){
+            text = text.trim();
+            
+            if(text === "" || text === " "){
+                return;
+            }
+            items.push({id: idCount++, text: text});
+            render();
+        }
+
+        function removeItem(id){
+            items = items.filter(i => i.id !== id);
+            render();
+        }
+
+        function editItem(id, newText){
+            newText = newText.trim();
+            const item = items.find(i => i.id === id);
+            if(item && newText){
+                item.text = newText;
+            }
+            render();
+        }
+
+        function render(){
+            shoppingList.innerHTML = '';
+
+            items.forEach(item => {
+                const li = document.createElement('li')
+                li.dataset.id = item.id;
+
+                // Text Label
+                const span = document.createElement('span');
+                span.className = 'item-text';
+                span.textContent = item.text;
+
+                // Edit Button
+                const editButton = document.createElement('button');
+                editButton.className = 'icon-btn'
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', () => startEdit(li, item));
+
+                // Delete Button
+                const deleteButton = document.createElement('button');
+                deleteButton.className = 'icon-btn delete'
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => removeItem(item.id));
+
+                li.append(span, editButton, deleteButton);
+                shoppingList.appendChild(li)
+            });
+
+            updateMeta();
+        }
+
+        function startEdit(li, item){
+            li.innerHTML = '';
+
+            const editInput = document.createElement('input');
+            editInput.type = 'text';
+            editInput.className = 'edit-input';
+            editInput.value = item.text;
+
+            const saveButton = document.createElement('button');
+            saveButton.className = 'icon-btn';
+            saveButton.textContent = 'Save';
+
+            const cancelButton = document.createElement('button');
+            cancelButton.className = 'icon-btn';
+            cancelButton.textContent = 'Cancel';
+
+            const commit = () => editItem(item.id, editInput.value);
+            saveButton.addEventListener('click', commit);
+            cancelButton.addEventListener('click', render);
+            editInput.addEventListener('keydown', e => {
+                if(e.key === 'Enter') commit();
+                if(e.key === 'Escape') render();
+            });
+
+            li.append(editInput, saveButton, cancelButton);
+            editInput.focus();
+            editInput.select();
+        }
+
+        addButton.addEventListener('click', () => {
+            addItem(itemInput.value);
+            itemInput.value = '';
+            itemInput.focus();
+        });
+
+        itemInput.addEventListener('keydown', e => {
+            if(e.key === 'Enter'){
+                addItem(itemInput.value);
+                itemInput.value = '';
+            }
+        });
+
+        render()
+    </script>
     
 </body>
 </html>
